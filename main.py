@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Property, Slot, Signal
+from PySide6.QtCore import QObject, Property, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -25,11 +25,14 @@ class Counter(QObject):
 
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)
+
+    # The counter object is created BEFORE the QML engine so that its destructor is called after the QML engine's. This avoids "Cannot read property x of null" errors.
+    counter = Counter()
+
     engine = QQmlApplicationEngine()
     qml_file = Path(__file__).resolve().parent / "main.qml"
 
-    # The counter property is defined and set BEFORE the QML file is loaded. Without this, we would see ReferenceErrors in the console.
-    counter = Counter()
+    # The counter property is set BEFORE the QML file is loaded. Without this, we would see ReferenceErrors in the console.
     engine.rootContext().setContextProperty("counter", counter)
 
     engine.load(qml_file)
